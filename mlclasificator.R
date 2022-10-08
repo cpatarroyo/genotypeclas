@@ -1,39 +1,39 @@
 library(caret)
-library(bnclassify)
-library(klaR)
+#library(bnclassify)
+#library(klaR)
 library(poppr)
+library(nnet)
 
-population <- read.genalex("Base de datos ColPeru.csv",ploidy = 3)
+setwd("C:/Users/capat/Documents/Uniandes/Tesis/Tangent/genotypeclas")
 
+modtrain <- function(population) {
+  
+  #Prepare the population table for model training
+  #population <- read.genalex(population)
+  population <- clonecorrect(population, strata = NA)
+  population <- missingno(population, cutoff = 0, type = "geno")
+  poptrain <- population@tab
+  poplabel <- population@pop
+  
+  #Train the neural network model
+  set.seed(999)
+  searchspace <- expand.grid(size =1:8, decay = seq(0,5, by =0.5))
+  trmodel <- train(poptrain,poplabel, method = 'nnet',tuneLength = 1, tuneGrid = searchspace)
+  #Train the naive bayes clasificator model
+  #trmodel <- train(poptrain,poplabel, method = 'nb',tuneLength = 1)
+  
+  #Save and return the trained model
+  saveRDS(trmodel, file = "Trained_model.rds")
+  print(c((mean(trmodel$resample$Accuracy)),mean(trmodel$resample$Kappa)))
+  return(trmodel)
+}
 
-#bruvo.msn(population, vertex.label = NA)
-population <- clonecorrect(population, strata = NA)
+newPredict <- function(newdata) {
+  
+}
 
-population <- missingno(population, cutoff = 0, type = "geno")
+testmod <- modtrain(population = population)
 
-str(population)
+confusionMatrix.train(testmod)
 
-population@tab
-population@pop
-
-restest <- data.frame(Real = population@pop, Pred = NA)
-rownames(restest) <- rownames(population@tab)
-
-#head(restest)
-
-training <- sort(sample(1:362,floor(0.7*length(population@pop))))
-
-poptrain <- population@tab[training,]
-poplabel <- as.character(population@pop[training])
-
-poptest <- population@tab[-training,]
-restest <- restest[-training,]
-
-set.seed(999)
-model <- train(poptrain, poplabel, method = 'nb',tuneLength = 10)
-warnings()
-model
-
-restest$Pred <- predict(model,newdata = poptest)
-confusionMatrix.train(model)
-
+testmod$finalModel$xNames
