@@ -6,7 +6,9 @@ library(nnet)
 
 setwd("C:/Users/capat/Documents/Uniandes/Tesis/Tangent/genotypeclas")
 
-modtrain <- function(population) {
+poptrain <- read.genalex("Base de datos ColPeru.csv", ploidy = 3)
+
+modTrain <- function(population) {
   
   #Prepare the population table for model training
   #population <- read.genalex(population)
@@ -14,6 +16,10 @@ modtrain <- function(population) {
   population <- missingno(population, cutoff = 0, type = "geno")
   poptrain <- population@tab
   poplabel <- population@pop
+  
+  #Remove uninformative "alleles" 
+  uninf <- grep("\\.0$",colnames(poptrain))
+  poptrain <- poptrain[,-uninf]
   
   #Train the neural network model
   set.seed(999)
@@ -29,11 +35,11 @@ modtrain <- function(population) {
 }
 
 newPredict <- function(newdata) {
-  
+  poptest <- read.genalex("population.csv",ploidy =3)
 }
 
 testmod <- modtrain(population = population)
 
-confusionMatrix.train(testmod)
+confusionMatrix.train(trainedmod)
 
-testmod$finalModel$xNames
+trainedmod$finalModel$xNames
