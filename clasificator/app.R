@@ -34,7 +34,7 @@ newPredict <- function(newdata) {
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Phytophthora infestans genotype clasificator"),
+    titlePanel("Phytophthora infestans lineage clasificator"),
     sidebarLayout(
         sidebarPanel(
             fileInput("file", "Genalex File", buttonLabel = "Upload", accept = ".csv"),
