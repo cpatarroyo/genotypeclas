@@ -51,7 +51,7 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
     trainedModel <- readRDS("Trained_model.rds")
-    accMl <- mean(trainedModel$resample$Accuracy) * 100
+    accMl <- round(mean(trainedModel$resample$Accuracy) * 100, digits = 4)
     output$accuracy <- renderText(paste("Training accuracy is ",accMl, "%",sep = ""))
     
     popdata <- reactive({
