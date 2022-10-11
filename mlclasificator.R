@@ -29,7 +29,7 @@ modTrain <- function(population) {
   #trmodel <- train(poptrain,poplabel, method = 'nb',tuneLength = 1)
   
   #Save and return the trained model
-  saveRDS(trmodel, file = "Trained_model.rds")
+  saveRDS(trmodel, file = "clasificator/Trained_model.rds")
   print(c((mean(trmodel$resample$Accuracy)),mean(trmodel$resample$Kappa)))
   return(trmodel)
 }
@@ -54,11 +54,11 @@ newPredict <- function(newdata) {
   newtable <- cbind(newtable,tempMat)
 
   #Generate the prediction and arrange in a results table
-  resTable <- data.frame(Genotype = predict(trainedModel,newtable), Probability = unlist(apply(predict(trainedModel,newtable,type = "prob"),MARGIN = 1,FUN = max)))
+  resTable <- data.frame(Lineage = predict(trainedModel,newtable), Probability = unlist(apply(predict(trainedModel,newtable,type = "prob"),MARGIN = 1,FUN = max)))
   
   #Return the resulting table
   return(resTable)
   
 }
 
-test <- newPredict("Base de datos global_Camilo-CHN.csv")
+

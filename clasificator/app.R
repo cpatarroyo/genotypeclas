@@ -23,7 +23,7 @@ newPredict <- function(newdata) {
     newtable <- cbind(newtable,tempMat)
     
     #Generate the prediction and arrange in a results table
-    resTable <- data.frame(Genotype = predict(trainedModel,newtable), Probability = unlist(apply(predict(trainedModel,newtable,type = "prob"),MARGIN = 1,FUN = max)))
+    resTable <- data.frame(Id = rownames(newtable), Lineage = predict(trainedModel,newtable), Probability = unlist(apply(predict(trainedModel,newtable,type = "prob"),MARGIN = 1,FUN = max)))
     
     #Return the resulting table
     return(resTable)
@@ -39,6 +39,7 @@ ui <- fluidPage(
         sidebarPanel(
             fileInput("file", "Genalex File", buttonLabel = "Upload", accept = ".csv"),
             textOutput("accuracy"),
+            downloadButton("report", "Download results"),
             width = 3
         ),
         mainPanel(
@@ -55,11 +56,20 @@ server <- function(input, output) {
     
     popdata <- reactive({
         req(input$file)
+        
+        input$file$datapath
     })
 
     output$prediction <- renderTable({
         newPredict(popdata())
     })
+    
+    output$report <- downloadHandler(
+        filename = "Predicted_lineages.csv",
+        content = function(file) {
+            write.csv(newPredict(popdata())[,-1],file)
+        }
+    )
     
 }
 
