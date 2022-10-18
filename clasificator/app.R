@@ -40,6 +40,7 @@ ui <- fluidPage(
             fileInput("file", "Genalex File", buttonLabel = "Upload", accept = ".csv"),
             textOutput("accuracy"),
             downloadButton("report", "Download results"),
+            downloadButton("probabilities", "Download full table"),
             width = 3
         ),
         mainPanel(
@@ -71,6 +72,11 @@ server <- function(input, output) {
         }
     )
     
+    output$probabilities <- downloadHandler(
+      filename = "Probability_table.csv",
+      content = function(file) {
+      }
+    )
 }
 
 # Run the application 
