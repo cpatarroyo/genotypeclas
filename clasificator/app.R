@@ -22,11 +22,17 @@ newPredict <- function(newdata) {
     tempMat <- matrix(data = 0, nrow = length(newtable[,1]), ncol = length(missingAl), dimnames = list(rownames(newtable), trainedModel$finalModel$xNames[missingAl]))
     newtable <- cbind(newtable,tempMat)
     
+    #Create a list of results
+    results <- list()
+
     #Generate the prediction and arrange in a results table
-    resTable <- data.frame(Id = rownames(newtable), Lineage = predict(trainedModel,newtable), Probability = unlist(apply(predict(trainedModel,newtable,type = "prob"),MARGIN = 1,FUN = max)))
+    results[[1]] <- data.frame(Id = rownames(newtable), Lineage = predict(trainedModel,newtable), Probability = unlist(apply(predict(trainedModel,newtable,type = "prob"),MARGIN = 1,FUN = max)))
+    
+    #Generate the prediction probability table 
+    results[[2]] <- predict(trainedModel,newtable,type = "prob")
     
     #Return the resulting table
-    return(resTable)
+    return(results)
     
 }
 
@@ -62,19 +68,20 @@ server <- function(input, output) {
     })
 
     output$prediction <- renderTable({
-        newPredict(popdata())
+        newPredict(popdata())[[1]]
     })
     
     output$report <- downloadHandler(
         filename = "Predicted_lineages.csv",
         content = function(file) {
-            write.csv(newPredict(popdata())[,-1],file)
+            write.csv(newPredict(popdata())[[1]][,-1],file)
         }
     )
     
     output$probabilities <- downloadHandler(
       filename = "Probability_table.csv",
       content = function(file) {
+        write.csv(newPredict(popdata())[[2]],file)
       }
     )
 }
