@@ -4,9 +4,9 @@ library(caret)
 library(poppr)
 library(nnet)
 
-setwd("C:/Users/capat/Documents/Uniandes/Tesis/Tangent/genotypeclas")
+setwd("~/Uniandes/Rfiles/genotypeclas")
 
-poptrain <- read.genalex("Base de datos ColPeru.csv", ploidy = 3)
+poptrain <- read.genalex("Training_DB.csv", ploidy = 3)
 
 modTrain <- function(population) {
   
