@@ -1,12 +1,19 @@
 library(caret)
-#library(bnclassify)
-#library(klaR)
+library(bnclassify)
+library(klaR)
 library(poppr)
 library(nnet)
+library(arm)
+library(adabag)
+library(plyr)
 
 setwd("~/Uniandes/Rfiles/genotypeclas")
 
-poptrain <- read.genalex("Training_DB.csv", ploidy = 3)
+population <- read.genalex("Training_DB.csv", ploidy = 3)
+
+trainlen <- round(summary(population)$n*0.8,digits = 0)
+
+trainindex <- sort(sample(1:summary(population)$n,trainlen,replace = FALSE))
 
 modTrain <- function(population) {
   
@@ -25,8 +32,15 @@ modTrain <- function(population) {
   set.seed(999)
   searchspace <- expand.grid(size =1:8, decay = seq(0,5, by =0.5))
   trmodel <- train(poptrain,poplabel, method = 'nnet',tuneLength = 1, tuneGrid = searchspace)
+  
   #Train the naive bayes clasificator model
   #trmodel <- train(poptrain,poplabel, method = 'nb',tuneLength = 1)
+  
+  #Train Model by a bayes generalized linear model
+  #trmodel <- train(poptrain,poplabel, method = 'bayesglm')
+  
+  #Train model by Ada boost
+  #trmodel <- train(poptrain,poplabel, method = 'AdaBag', maxdepth = 30)
   
   #Save and return the trained model
   saveRDS(trmodel, file = "clasificator/Trained_model.rds")
@@ -36,7 +50,8 @@ modTrain <- function(population) {
 
 newPredict <- function(newdata) {
   #Load the population to be classified
-  newpop <- read.genalex(newdata,ploidy =3)
+  #newpop <- read.genalex(newdata,ploidy =3)
+  newpop <- newdata
   
   #Load the trained model 
   trainedModel <- readRDS("clasificator/Trained_model.rds")
@@ -54,11 +69,22 @@ newPredict <- function(newdata) {
   newtable <- cbind(newtable,tempMat)
 
   #Generate the prediction and arrange in a results table
-  resTable <- data.frame(Lineage = predict(trainedModel,newtable), Probability = unlist(apply(predict(trainedModel,newtable,type = "prob"),MARGIN = 1,FUN = max)))
+  resTable <- data.frame(rownames(newtable),
+                         PrLineage = predict(trainedModel,newtable),
+                         Probability = unlist(apply(predict(trainedModel,newtable,type = "prob"),MARGIN = 1,FUN = max)),
+                         Lineage = newpop@pop)
   
   #Return the resulting table
   return(resTable)
   
 }
 
+training <- population[trainindex]
 
+test <- population[-trainindex]
+
+modTrain(training)
+
+prediction <- newPredict(test)
+
+sum(as.character(prediction$PrLineage) == as.character(prediction$Lineage),na.rm = T)/(dim(prediction)[1])
