@@ -30,11 +30,11 @@ modTrain <- function(population) {
   
   #Train the neural network model
   set.seed(999)
-  searchspace <- expand.grid(size =1:8, decay = seq(0,5, by =0.5))
-  trmodel <- train(poptrain,poplabel, method = 'nnet',tuneLength = 1, tuneGrid = searchspace)
+  #searchspace <- expand.grid(size =1:8, decay = seq(0,5, by =0.5))
+  #trmodel <- train(poptrain,poplabel, method = 'nnet',tuneLength = 1, tuneGrid = searchspace)
   
   #Train the naive bayes clasificator model
-  #trmodel <- train(poptrain,poplabel, method = 'nb',tuneLength = 1)
+  trmodel <- train(poptrain,poplabel, method = 'nb',tuneLength = 1)
   
   #Train Model by a bayes generalized linear model
   #trmodel <- train(poptrain,poplabel, method = 'bayesglm')
