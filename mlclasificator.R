@@ -100,7 +100,4 @@ while(count < 20) {
   
 }
 
-
-
-
-
+write.csv(restab,file = "Output.csv")
