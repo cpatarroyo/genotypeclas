@@ -1,20 +1,27 @@
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
+
 library(caret)
-#library(bnclassify)
+library(bnclassify)
 library(klaR)
 library(poppr)
 library(nnet)
-#library(arm)
-#library(adabag)
-#library(plyr)
+library(arm)
+library(adabag)
+library(plyr)
+library(bst)
+library(plyr)
+library(obliqueRF)
+library(party)
+library(RSNNS)
 
 setwd("~/Uniandes/Rfiles/genotypeclas")
 
 population <- read.genalex("Training_DB.csv", ploidy = 3)
 
-modTrain <- function(population) {
+modTrain <- function(population, method = NULL) {
   
   #Prepare the population table for model training
-  #population <- read.genalex(population)
   population <- clonecorrect(population, strata = NA)
   population <- missingno(population, cutoff = 0, type = "geno")
   poptrain <- population@tab
@@ -24,19 +31,43 @@ modTrain <- function(population) {
   uninf <- grep("\\.0$",colnames(poptrain))
   poptrain <- poptrain[,-uninf]
   
-  #Train the neural network model
   set.seed(999)
-  searchspace <- expand.grid(size =1:8, decay = seq(0,5, by =0.5))
-  trmodel <- train(poptrain,poplabel, method = 'nnet',tuneLength = 1, tuneGrid = searchspace)
   
-  #Train the naive bayes clasificator model
-  #trmodel <- train(poptrain,poplabel, method = 'nb',tuneLength = 1)
-  
-  #Train Model by a bayes generalized linear model
-  #trmodel <- train(poptrain,poplabel, method = 'bayesglm')
-  
-  #Train model by Ada boost
-  #trmodel <- train(poptrain,poplabel, method = 'AdaBag', maxdepth = 30)
+  #Training method selection
+  if(method == "nn" || is.null(method)) {
+    #Train the neural network model
+    searchspace <- expand.grid(size =1:8, decay = seq(0,5, by =0.5))
+    trmodel <- train(poptrain,poplabel, method = 'nnet',tuneLength = 1, tuneGrid = searchspace)
+  }
+  else if(method == "nb") {
+    #Train the naive bayes clasificator model
+    trmodel <- train(poptrain,poplabel, method = 'nb',tuneLength = 1)
+  }
+  else if(method == "bayesglm") {
+    #Train Model by a bayes generalized linear model
+    trmodel <- train(poptrain,poplabel, method = 'bayesglm')
+  }
+  else if(method == "adabag") {
+    #Train model by Ada boost
+    trmodel <- train(poptrain,poplabel, method = 'AdaBag', maxdepth = 30)
+  } 
+  else if(method == "bsttree") {
+    #Train model by Ada boost classification tree
+    trmodel <- train(poptrain,poplabel, method = 'bstTree')
+  }
+  else if(method == "oblique") {
+    trmodel <- train(poptrain,poplabel, method = 'ORFpls')
+  }
+  else if(method == "cforest") {
+    trmodel <- train(poptrain,poplabel, method = 'cforest')
+  }
+  else if(method == "mlnn") {
+    searchspace <- expand.grid(layer1=1:5,layer2=0:5,layer3=0:5)
+    trmodel <- train(poptrain,poplabel, method = 'mlpML',tuneGrid = searchspace)
+  }
+  else {
+    stop("You must enter a valid training method")
+  }
   
   #Save and return the trained model
   #saveRDS(trmodel, file = "clasificator/Trained_model.rds")
@@ -89,15 +120,17 @@ while(count < 20) {
   trainindex <- sort(sample(1:summary(population)$n,trainlen,replace = FALSE))
   training <- population[trainindex]
   test <- population[-trainindex]
+  test <- missingno(test, cutoff = 0, type = "geno")
   
   #Train the ML model
-  trainedModel <- modTrain(training)
-  indexRes <- which(trainedModel$results$size==trainedModel$bestTune$size)[which(which(trainedModel$results$size==trainedModel$bestTune$size) %in% which(trainedModel$results$decay == trainedModel$bestTune$decay))]
+  trainedModel <- modTrain(training, method = args[1])
   
   #Make the prediction
-  prediction <- newPredict(test)
-  restab <- rbind(restab,c(trainedModel$results$Accuracy[indexRes],trainedModel$results$Kappa[indexRes],sum(as.character(prediction$PrLineage) == as.character(prediction$Lineage),na.rm = T)/(dim(prediction)[1])))
+  prediction <- newPredict(test,model = trainedModel)
+  restab <- rbind(restab,c(trainedModel$results$Accuracy[tolerance(trainedModel$results,metric = "Accuracy",maximize = TRUE)],trainedModel$results$Kappa[tolerance(trainedModel$results,metric = "Kappa",maximize = TRUE)],sum(as.character(prediction$PrLineage) == as.character(prediction$Lineage),na.rm = T)/(dim(prediction)[1])))
   
 }
 
-write.csv(restab,file = "Output.csv")
+colnames(restab)<-c("Accuracy","Kappa","TestAc")
+
+write.csv(restab,file = paste(args[2],".csv",sep = ""))
