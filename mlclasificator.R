@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
-args = commandArgs(trailingOnly=TRUE)
+#args = commandArgs(trailingOnly=TRUE)
+args <- c("cforest", "cforest")
 
-library(caret)
+library(RSNNS)
 library(bnclassify)
 library(klaR)
 library(poppr)
@@ -13,7 +14,7 @@ library(bst)
 library(plyr)
 library(obliqueRF)
 library(party)
-library(RSNNS)
+library(caret)
 
 setwd("~/Uniandes/Rfiles/genotypeclas")
 
@@ -37,33 +38,33 @@ modTrain <- function(population, method = NULL) {
   if(method == "nn" || is.null(method)) {
     #Train the neural network model
     searchspace <- expand.grid(size =1:8, decay = seq(0,5, by =0.5))
-    trmodel <- train(poptrain,poplabel, method = 'nnet',tuneLength = 1, tuneGrid = searchspace)
+    trmodel <- caret::train(poptrain,poplabel, method = 'nnet',tuneLength = 1, tuneGrid = searchspace)
   }
   else if(method == "nb") {
     #Train the naive bayes clasificator model
-    trmodel <- train(poptrain,poplabel, method = 'nb',tuneLength = 1)
+    trmodel <- caret::train(poptrain,poplabel, method = 'nb',tuneLength = 1)
   }
   else if(method == "bayesglm") {
     #Train Model by a bayes generalized linear model
-    trmodel <- train(poptrain,poplabel, method = 'bayesglm')
+    trmodel <- caret::train(poptrain,poplabel, method = 'bayesglm')
   }
   else if(method == "adabag") {
     #Train model by Ada boost
-    trmodel <- train(poptrain,poplabel, method = 'AdaBag', maxdepth = 30)
+    trmodel <- caret::train(poptrain,poplabel, method = 'AdaBag', maxdepth = 30)
   } 
   else if(method == "bsttree") {
     #Train model by Ada boost classification tree
-    trmodel <- train(poptrain,poplabel, method = 'bstTree')
+    trmodel <- caret::train(poptrain,poplabel, method = 'bstTree')
   }
   else if(method == "oblique") {
-    trmodel <- train(poptrain,poplabel, method = 'ORFpls')
+    trmodel <- caret::train(poptrain,poplabel, method = 'ORFpls')
   }
   else if(method == "cforest") {
-    trmodel <- train(poptrain,poplabel, method = 'cforest')
+    trmodel <- caret::train(poptrain,poplabel, method = 'cforest')
   }
   else if(method == "mlnn") {
     searchspace <- expand.grid(layer1=1:5,layer2=0:5,layer3=0:5)
-    trmodel <- train(poptrain,poplabel, method = 'mlpML',tuneGrid = searchspace)
+    trmodel <- caret::train(poptrain,poplabel, method = 'mlpML',tuneGrid = searchspace)
   }
   else {
     stop("You must enter a valid training method")
@@ -94,15 +95,17 @@ newPredict <- function(newdata, model = NULL) {
   uninf <- grep("\\.0$",colnames(newtable))
   newtable <- newtable[,-uninf]
   
-  #Equate the predictors in the model to the variables in the new dataset
-  missingAl <- which(!trainedModel$finalModel$xNames %in% colnames(newtable))
-  tempMat <- matrix(data = 0, nrow = length(newtable[,1]), ncol = length(missingAl), dimnames = list(rownames(newtable), trainedModel$finalModel$xNames[missingAl]))
-  newtable <- cbind(newtable,tempMat)
-
+  if(class(trainedModel$finalModel) != "RandomForest") {
+    #Equate the predictors in the model to the variables in the new dataset
+    missingAl <- which(!trainedModel$finalModel$xNames %in% colnames(newtable))
+    tempMat <- matrix(data = 0, nrow = length(newtable[,1]), ncol = length(missingAl), dimnames = list(rownames(newtable), trainedModel$finalModel$xNames[missingAl]))
+    newtable <- cbind(newtable,tempMat)
+  }
+  
   #Generate the prediction and arrange in a results table
-  resTable <- data.frame(rownames(newtable),
+  resTable <- data.frame(Name = rownames(newtable),
                          PrLineage = predict(trainedModel,newtable),
-                         Probability = unlist(apply(predict(trainedModel,newtable,type = "prob"),MARGIN = 1,FUN = max)),
+                         #Probability = unlist(apply(predict(trainedModel,newtable,type = "prob"),MARGIN = 1,FUN = max)),
                          Lineage = newpop@pop)
   
   #Return the resulting table
@@ -114,7 +117,7 @@ count <- 0
 restab <- data.frame(Accuracy = double(), Kappa = double(), TestPred = double())
 
 #Niter tests for the accuracy of the ML algorithm prediction
-while(count < 20) {
+while(count < 3) {
   #Define the data partition for training and testing
   trainlen <- round(summary(population)$n*0.8,digits = 0)
   trainindex <- sort(sample(1:summary(population)$n,trainlen,replace = FALSE))
@@ -128,7 +131,7 @@ while(count < 20) {
   #Make the prediction
   prediction <- newPredict(test,model = trainedModel)
   restab <- rbind(restab,c(trainedModel$results$Accuracy[tolerance(trainedModel$results,metric = "Accuracy",maximize = TRUE)],trainedModel$results$Kappa[tolerance(trainedModel$results,metric = "Kappa",maximize = TRUE)],sum(as.character(prediction$PrLineage) == as.character(prediction$Lineage),na.rm = T)/(dim(prediction)[1])))
-  
+  count <- count+1
 }
 
 colnames(restab)<-c("Accuracy","Kappa","TestAc")
