@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 #args = commandArgs(trailingOnly=TRUE)
-args <- c("cforest", "cforest")
+args <- c("nn", "lolz")
 
 library(RSNNS)
 library(bnclassify)
@@ -18,7 +18,7 @@ library(caret)
 
 setwd("~/Uniandes/Rfiles/genotypeclas")
 
-population <- read.genalex("Training_DB.csv", ploidy = 3)
+population <- read.genalex("Balanced_DS.csv", ploidy = 3)
 
 modTrain <- function(population, method = NULL) {
   
@@ -95,7 +95,7 @@ newPredict <- function(newdata, model = NULL) {
   uninf <- grep("\\.0$",colnames(newtable))
   newtable <- newtable[,-uninf]
   
-  if(class(trainedModel$finalModel) != "RandomForest") {
+  if(class(trainedModel$finalModel)[1] != "RandomForest") {
     #Equate the predictors in the model to the variables in the new dataset
     missingAl <- which(!trainedModel$finalModel$xNames %in% colnames(newtable))
     tempMat <- matrix(data = 0, nrow = length(newtable[,1]), ncol = length(missingAl), dimnames = list(rownames(newtable), trainedModel$finalModel$xNames[missingAl]))
@@ -119,10 +119,10 @@ restab <- data.frame(Accuracy = double(), Kappa = double(), TestPred = double())
 #Niter tests for the accuracy of the ML algorithm prediction
 while(count < 3) {
   #Define the data partition for training and testing
-  trainlen <- round(summary(population)$n*0.8,digits = 0)
+  trainlen <- round(summary(population)$n*0.2,digits = 0)
   trainindex <- sort(sample(1:summary(population)$n,trainlen,replace = FALSE))
-  training <- population[trainindex]
-  test <- population[-trainindex]
+  training <- population[-trainindex]
+  test <- population[trainindex]
   test <- missingno(test, cutoff = 0, type = "geno")
   
   #Train the ML model
