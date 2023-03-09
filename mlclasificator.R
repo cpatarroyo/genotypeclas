@@ -18,7 +18,11 @@ library(caret)
 
 setwd("~/Uniandes/Rfiles/genotypeclas")
 
-population <- read.genalex("Balanced_DS.csv", ploidy = 3)
+wholepop <- read.genalex("Training_DB2.csv", ploidy = 3)
+
+ec1ind <- which(pop(wholepop) == "EC1")
+pe3ind <- which(pop(wholepop) == "PE3")
+eu13ind <- which(pop(wholepop) == "EU13")
 
 modTrain <- function(population, method = NULL) {
   
@@ -118,6 +122,10 @@ restab <- data.frame(Accuracy = double(), Kappa = double(), TestPred = double())
 
 #Niter tests for the accuracy of the ML algorithm prediction
 while(count < 3) {
+  
+  #Sample and select the individuals present in the balanced database
+  population <- wholepop[c(sample(ec1ind,76), pe3ind, sample(eu13ind,76))]
+  
   #Define the data partition for training and testing
   trainlen <- round(summary(population)$n*0.2,digits = 0)
   trainindex <- sort(sample(1:summary(population)$n,trainlen,replace = FALSE))

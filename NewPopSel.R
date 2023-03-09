@@ -1,9 +1,11 @@
 #Process to select a balanced learning set
 
 #Selecting the lineages with higher representation
-test1eq <- popsub(population,sublist = c("EC1","EU2A1","EU13"))
+population <-read.genalex("Training_DB.csv", ploidy = 3)
 
-repvec <- c(sample(1:1081,154,replace = FALSE),sample(which(pop(test1eq) == "EU2A1"),154, replace=FALSE),which(pop(test1eq) == "EU13"))
+test1eq <- popsub(population,sublist = c("EC1","PE3","EU13"))
+
+repvec <- c(sample(1:1081,76,replace = FALSE),sample(which(pop(test1eq) == "EU2A1"),76, replace=FALSE),which(pop(test1eq) == "EU13"))
 
 test1eq <- test1eq[repvec]
 
@@ -37,3 +39,4 @@ prepare <- function(route, index=NULL) {
   write.csv(ssrTab,file = ssrname, row.names = FALSE)
   write.csv(popTab,file = popname, row.names = FALSE)
 }
+test1eq
