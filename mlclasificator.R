@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 #args = commandArgs(trailingOnly=TRUE)
-args <- c("nn", "lolz")
+args <- c("bayesglm", "lolz")
 
 library(RSNNS)
 library(bnclassify)
@@ -118,7 +118,7 @@ newPredict <- function(newdata, model = NULL) {
 }
 
 count <- 0
-restab <- data.frame(Accuracy = double(), Kappa = double(), TestPred = double())
+restab <- data.frame(Accuracy = double(), Kappa = double(), TestPred = double(), TestKappa = vector())
 
 #Niter tests for the accuracy of the ML algorithm prediction
 while(count < 3) {
@@ -138,10 +138,11 @@ while(count < 3) {
   
   #Make the prediction
   prediction <- newPredict(test,model = trainedModel)
-  restab <- rbind(restab,c(trainedModel$results$Accuracy[tolerance(trainedModel$results,metric = "Accuracy",maximize = TRUE)],trainedModel$results$Kappa[tolerance(trainedModel$results,metric = "Kappa",maximize = TRUE)],sum(as.character(prediction$PrLineage) == as.character(prediction$Lineage),na.rm = T)/(dim(prediction)[1])))
+  confMatrix <- confusionMatrix(prediction$PrLineage, prediction$Lineage)
+  restab <- rbind(restab,c(trainedModel$results$Accuracy[tolerance(trainedModel$results,metric = "Accuracy",maximize = TRUE)],trainedModel$results$Kappa[tolerance(trainedModel$results,metric = "Kappa",maximize = TRUE)],unlist(confMatrix$overall["Accuracy"]), unlist(confMatrix$overall["Kappa"])))
   count <- count+1
 }
 
-colnames(restab)<-c("Accuracy","Kappa","TestAc")
+colnames(restab)<-c("Accuracy","Kappa","TestAc","TestKappa")
 
 write.csv(restab,file = paste(args[2],".csv",sep = ""))
