@@ -118,16 +118,20 @@ newPredict <- function(newdata, model = NULL) {
 }
 
 count <- 0
-restab <- data.frame(Accuracy = double(), Kappa = double(), TestPred = double(), TestKappa = vector())
+#This counter is added to keep track of the cycles ran since there is a safety in place when the testing set and the training set lineages don't overlap
+safetyCount <- 0
+restab <- data.frame(Accuracy = double(), Kappa = double(), TestPred = double(), NoInfo = double(), pVal=double, TestKappa = vector())
 
 #Niter tests for the accuracy of the ML algorithm prediction
-while(count < 3) {
+while(count < 5 && safetyCount < 100) {
+  #Count the total iterations of the cycle irrespective of if it produced useful data
+  safetyCount <- safetyCount + 1
   
   #Sample and select the individuals present in the balanced database
   population <- wholepop[c(sample(ec1ind,76), pe3ind, sample(eu13ind,76))]
   
   #Define the data partition for training and testing
-  trainlen <- round(summary(population)$n*0.2,digits = 0)
+  trainlen <- round(summary(population)$n*0.5,digits = 0)
   trainindex <- sort(sample(1:summary(population)$n,trainlen,replace = FALSE))
   training <- population[-trainindex]
   test <- population[trainindex]
@@ -138,6 +142,12 @@ while(count < 3) {
   
   #Make the prediction
   prediction <- newPredict(test,model = trainedModel)
+  
+  if(!length(intersect(prediction$PrLineage,prediction$Lineage))) {
+    next
+  }
+  
+  #Calculate the confusion matrix and the performance statistics
   confMatrix <- confusionMatrix(prediction$PrLineage, prediction$Lineage)
   restab <- rbind(restab,c(trainedModel$results$Accuracy[tolerance(trainedModel$results,metric = "Accuracy",maximize = TRUE)],trainedModel$results$Kappa[tolerance(trainedModel$results,metric = "Kappa",maximize = TRUE)],unlist(confMatrix$overall["Accuracy"]),unlist(confMatrix$overall["AccuracyNull"]), unlist(confMatrix$overall["AccuracyPValue"]), unlist(confMatrix$overall["Kappa"])))
   count <- count+1
