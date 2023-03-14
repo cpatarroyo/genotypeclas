@@ -139,10 +139,10 @@ while(count < 3) {
   #Make the prediction
   prediction <- newPredict(test,model = trainedModel)
   confMatrix <- confusionMatrix(prediction$PrLineage, prediction$Lineage)
-  restab <- rbind(restab,c(trainedModel$results$Accuracy[tolerance(trainedModel$results,metric = "Accuracy",maximize = TRUE)],trainedModel$results$Kappa[tolerance(trainedModel$results,metric = "Kappa",maximize = TRUE)],unlist(confMatrix$overall["Accuracy"]), unlist(confMatrix$overall["Kappa"])))
+  restab <- rbind(restab,c(trainedModel$results$Accuracy[tolerance(trainedModel$results,metric = "Accuracy",maximize = TRUE)],trainedModel$results$Kappa[tolerance(trainedModel$results,metric = "Kappa",maximize = TRUE)],unlist(confMatrix$overall["Accuracy"]),unlist(confMatrix$overall["AccuracyNull"]), unlist(confMatrix$overall["AccuracyPValue"]), unlist(confMatrix$overall["Kappa"])))
   count <- count+1
 }
 
-colnames(restab)<-c("Accuracy","Kappa","TestAc","TestKappa")
+colnames(restab)<-c("Accuracy","Kappa","TestAc","NoInfAc","AccPval","TestKappa")
 
 write.csv(restab,file = paste(args[2],".csv",sep = ""))
