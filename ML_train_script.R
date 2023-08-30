@@ -20,8 +20,9 @@ modTrain <- function(population) {
   
   #Train the neural network model
   set.seed(999)
-  searchspace <- expand.grid(size =1:8, decay = seq(0,5, by =0.5))
-  trmodel <- train(poptrain,poplabel, method = 'nnet',tuneLength = 1, tuneGrid = searchspace)
+  #searchspace <- expand.grid(size =1:8, decay = seq(0,5, by =0.5))
+  #trmodel <- train(poptrain,poplabel, method = 'nnet',tuneLength = 1, tuneGrid = searchspace)
+  trmodel <- caret::train(poptrain,poplabel, method = 'AdaBag', maxdepth = 30)
   
   #Save and return the trained model
   saveRDS(trmodel, file = "clasificator/Trained_model.rds")
