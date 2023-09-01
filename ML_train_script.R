@@ -1,6 +1,7 @@
 library(caret)
 library(poppr)
 library(nnet)
+library(adabag)
 
 setwd("~/Uniandes/Rfiles/genotypeclas")
 
