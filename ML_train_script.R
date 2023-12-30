@@ -26,7 +26,7 @@ modTrain <- function(population) {
   trmodel <- caret::train(poptrain,poplabel, method = 'AdaBag', maxdepth = 30)
   
   #Save and return the trained model
-  saveRDS(trmodel, file = "clasificator/Trained_model.rds")
+  saveRDS(trmodel, file = "classifier/Trained_model.rds")
   print(c((mean(trmodel$resample$Accuracy)),mean(trmodel$resample$Kappa)))
   #return(trmodel)
 }

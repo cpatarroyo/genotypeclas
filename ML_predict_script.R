@@ -12,7 +12,7 @@ newPredict <- function(newdata) {
   newpop <- read.genalex(newdata,ploidy =3)
   
   #Load the trained model 
-  trainedModel <- readRDS("clasificator/Trained_model.rds")
+  trainedModel <- readRDS("classifier/Trained_model.rds")
   
   #Load the allele table 
   newtable <- newpop@tab
