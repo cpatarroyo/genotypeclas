@@ -25,12 +25,12 @@ After the installation you can clone this GitHub repository to your local machin
 
 ### Model training
 
-For training the model the [ML_train_script.R] can be executed. This will create/overwrite the [classifier/Trained_model.rds] object with the trained AdaBag model. By default this script uses the [Training_DB.csv] file for training the model. There are two simple options to change the dataset used for model training:
+For training the model the [ML_train_script.R](ML_train_script.R) can be executed. This will create/overwrite the [classifier/Trained_model.rds](classifier/Trained_model.rds) object with the trained AdaBag model. By default this script uses the [Training_DB.csv](Training_DB.csv) file for training the model. There are two simple options to change the dataset used for model training:
 1) Add the new dataset to the local folder where the repository was cloned and rename it to "Training_DB.csv".
-2) in the [ML_train_script.R] line 8 change the file route "Training_DB.csv" to the route corresponding to your training set.
+2) in the [ML_train_script.R](ML_train_script.R) line 8 change the file route "Training_DB.csv" to the route corresponding to your training set.
 
 ### Genotype classification
 
-For local usage, if you are using RStudio open the [classifier/app.R] file, and click the "Run App" button. This will open the webapp UI where you can upload a GenAlEx file (or any poppr supported format) with the <i>P. infestans</i> microsatellite genotypes to be classified. Remember that the used markers must be the within the markers described by [Li et al. 2013](https://doi.org/10.1016/j.mimet.2012.11.021). 
+For local usage, if you are using RStudio open the [classifier/app.R](classifier/app.R) file, and click the "Run App" button. This will open the webapp UI where you can upload a GenAlEx file (or any poppr supported format) with the <i>P. infestans</i> microsatellite genotypes to be classified. Remember that the used markers must be the within the markers described by [Li et al. 2013](https://doi.org/10.1016/j.mimet.2012.11.021). 
 
 For remote use from an own server you have to access from your web browser the ip address of the server and the port desginated for the Shiny Server service, together with the route to the folder containing the present repository. 
