@@ -2,6 +2,7 @@ library(shiny)
 library(caret)
 library(poppr)
 library(nnet)
+library(adabag)
 
 newPredict <- function(newdata) {
     #Load the population to be classified
